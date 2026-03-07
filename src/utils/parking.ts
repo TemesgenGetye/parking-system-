@@ -1,5 +1,17 @@
 import { PaymentDetails, ParkingZone } from '@/types/parking';
 
+/** For active sessions, returns elapsed minutes; for completed/cancelled, returns stored duration */
+export function getDisplayDuration(session: {
+  startTime: Date;
+  duration: number;
+  status: string;
+}): number {
+  if (session.status === 'active') {
+    return Math.max(0, Math.floor((Date.now() - session.startTime.getTime()) / 60000));
+  }
+  return session.duration;
+}
+
 export function calculatePayment(duration: number, hourlyRate: number): PaymentDetails {
   const hours = duration / 60;
   const parkingFee = hours * hourlyRate;

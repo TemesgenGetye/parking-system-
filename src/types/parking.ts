@@ -9,6 +9,7 @@ export interface ParkingZone {
 export interface Vehicle {
   phoneNumber: string;
   plateNumber: string;
+  name?: string;
 }
 
 export interface ParkingSession {
