@@ -1,12 +1,13 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import StatusBar from '@/components/ui/StatusBar';
 import { calculatePayment, formatDuration, formatCurrency } from '@/utils/parking';
 import { useSessionById } from '@/hooks';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session');
 
@@ -55,7 +56,7 @@ export default function SuccessPage() {
     );
   }
 
-  if (!session && !isLoading) {
+  if (!session) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <StatusBar />
@@ -140,5 +141,18 @@ export default function SuccessPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <StatusBar />
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }

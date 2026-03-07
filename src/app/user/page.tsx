@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import StatusBar from '@/components/ui/StatusBar';
 import ZoneSelector from '@/components/parking/ZoneSelector';
@@ -9,7 +9,7 @@ import { ParkingZone, Vehicle } from '@/types/parking';
 import { calculatePayment } from '@/utils/parking';
 import { useAvailableZones, useCreateSession, useLogQrScan } from '@/hooks';
 
-export default function UserPortalPage() {
+function UserPortalContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const zoneParam = searchParams.get('zone');
@@ -154,5 +154,18 @@ export default function UserPortalPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function UserPortalPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <StatusBar />
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    }>
+      <UserPortalContent />
+    </Suspense>
   );
 }

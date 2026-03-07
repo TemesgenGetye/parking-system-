@@ -35,9 +35,11 @@ export default function Home() {
     setSelectedZone(zone);
   };
 
-  const handleVehicleSubmit = (vehicleData: Vehicle) => {
-    setVehicle(vehicleData);
-    setShowVehicleForm(false);
+  const handleVehicleSubmit = (vehicleData: Vehicle | null) => {
+    if (vehicleData) {
+      setVehicle(vehicleData);
+      setShowVehicleForm(false);
+    }
   };
 
   const handleContinue = () => {
