@@ -13,8 +13,7 @@ function SuccessContent() {
   const sessionId = searchParams.get('session');
 
   const { data: session, isLoading, error } = useSessionById(sessionId, {
-    refetchInterval: (query) =>
-      query.state.data?.status === 'active' ? 3000 : false,
+    refetchInterval: 3000,
   });
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
   const [currentPayment, setCurrentPayment] = useState({ parkingFee: 0, vat: 0, total: 0 });

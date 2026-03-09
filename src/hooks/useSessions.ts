@@ -19,10 +19,7 @@ export function useSessions() {
   });
 }
 
-export function useSessionById(
-  id: string | null,
-  options?: { refetchInterval?: number | ((query: { state: { data?: { status?: string } } }) => number | false) }
-) {
+export function useSessionById(id: string | null, options?: { refetchInterval?: number }) {
   return useQuery({
     queryKey: queryKeys.sessions.detail(id ?? ''),
     queryFn: () => fetchSessionById(id!),
