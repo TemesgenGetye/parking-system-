@@ -112,9 +112,7 @@ function LoginContent() {
           <p className="mt-6 text-center text-xs text-gray-500">
             Customer parking at <a href="/user" className="text-red-600 hover:underline">/user</a>
           </p>
-          <p className="mt-2 text-center text-xs text-gray-400">
-            Create admin user in Supabase Dashboard → Authentication → Users
-          </p>
+        
         </div>
       </div>
     </div>
