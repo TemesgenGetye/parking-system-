@@ -1,6 +1,9 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
   '/': { title: 'Booking', subtitle: 'Book parking for vehicles' },
@@ -14,8 +17,25 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
 
 export default function Header() {
   const pathname = usePathname() ?? '';
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
   const basePath = pathname.startsWith('/complete/') ? '/complete' : pathname;
   const { title, subtitle } = pageTitles[basePath] ?? { title: 'Dashboard', subtitle: 'Selam Parking System' };
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gray-200/80 bg-white/95 px-4 py-4 backdrop-blur-sm lg:px-8">
@@ -38,14 +58,21 @@ export default function Header() {
           </svg>
         </button>
         {/* User */}
-        <div className="flex items-center gap-3 rounded-2xl bg-gray-50 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-2xl bg-gray-50 px-3 py-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-sm font-semibold text-red-600">
-            A
+            {user?.email?.[0]?.toUpperCase() ?? 'A'}
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-semibold text-gray-900">Admin</p>
-            <p className="text-xs text-gray-500">admin@parking.com</p>
+            <p className="text-xs text-gray-500 truncate max-w-[140px]">{user?.email ?? '—'}</p>
           </div>
+          <button
+            onClick={handleSignOut}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors"
+            title="Sign out"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </header>

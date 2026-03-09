@@ -190,7 +190,7 @@ export default function Home() {
                 <div>
                   <p className="text-xs text-gray-500">Phone Number</p>
                   <p className="text-sm font-semibold text-black">
-                    {vehicle.phoneNumber}
+                    {vehicle?.phoneNumber}
                   </p>
                 </div>
                 <div>

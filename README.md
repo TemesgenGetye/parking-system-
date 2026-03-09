@@ -34,8 +34,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `/types` - TypeScript type definitions
 - `/utils` - Utility functions
 
+## Authentication
+
+- **Admin** – Protected. Sign in at `/login` to access Booking, Zones, History, Analytics.
+- **Customer** – No auth required. User portal at `/user`, success page at `/success`.
+
+**Setup admin user:** Supabase Dashboard → Authentication → Users → Add user (email + password). Enable Email provider in Auth settings if needed.
+
 ## Pages
 
+- **Login** (`/login`) - Admin sign-in (required for dashboard)
 - **Booking** (`/`) - Main booking page for selecting zones and vehicles
 - **Parking Zones** (`/zones`) - Manage parking zones and availability
 - **History** (`/history`) - View all parking sessions

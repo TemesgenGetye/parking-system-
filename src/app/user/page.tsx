@@ -1,17 +1,16 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import StatusBar from '@/components/ui/StatusBar';
 import ZoneSelector from '@/components/parking/ZoneSelector';
-import VehicleForm from '@/components/parking/VehicleForm';
+import VehicleForm, { type VehicleFormRef } from '@/components/parking/VehicleForm';
 import { ParkingZone, Vehicle } from '@/types/parking';
 import { calculatePayment } from '@/utils/parking';
 import { useAvailableZones, useCreateSession, useLogQrScan } from '@/hooks';
 
 function UserPortalContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const zoneParam = searchParams.get('zone');
 
   const { zones, availableZones, isLoading, error } = useAvailableZones();
@@ -19,8 +18,18 @@ function UserPortalContent() {
   const logQrScan = useLogQrScan();
 
   const [selectedZone, setSelectedZone] = useState<ParkingZone | null>(null);
-  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const vehicleFormRef = useRef<VehicleFormRef>(null);
+
+  const [initialVehicle] = useState<Vehicle | undefined>(() => {
+    if (typeof window === 'undefined') return undefined;
+    try {
+      const stored = sessionStorage.getItem('lastVehicle');
+      return stored ? (JSON.parse(stored) as Vehicle) : undefined;
+    } catch {
+      return undefined;
+    }
+  });
 
   useEffect(() => {
     if (zoneParam && availableZones.length > 0) {
@@ -41,7 +50,15 @@ function UserPortalContent() {
     plate.trim().length >= 5;
 
   const handleStart = async () => {
-    if (!selectedZone || !vehicle) return;
+    if (!selectedZone) {
+      alert('Please select a parking zone first.');
+      return;
+    }
+    const vehicle = vehicleFormRef.current?.getVehicle() ?? null;
+    if (!vehicle) {
+      alert('Please enter your phone number (09XXXXXXXX) and plate number (min 5 characters).');
+      return;
+    }
     if (isSubmitting) return;
     if (!validatePhoneNumber(vehicle.phoneNumber)) {
       alert('Please provide a valid phone number starting with 09 (e.g. 0912345678)');
@@ -73,7 +90,7 @@ function UserPortalContent() {
       });
 
       sessionStorage.setItem('lastVehicle', JSON.stringify(vehicle));
-      router.push(`/success?session=${session.id}`);
+      window.location.href = `/success?session=${session.id}`;
     } catch (err) {
       setIsSubmitting(false);
       alert(err instanceof Error ? err.message : 'Failed to start parking');
@@ -122,33 +139,31 @@ function UserPortalContent() {
           ) : (
             <div className="space-y-2">
               <p className="text-sm font-medium text-gray-700">Select a Parking Zone:</p>
+              <p className="text-xs text-gray-500 mb-1">Only zones without an active session can be selected.</p>
               <ZoneSelector
-                zones={availableZones}
+                zones={zones}
                 selectedZone={selectedZone}
                 onSelect={setSelectedZone}
-                onlyAvailable
+                onlyAvailable={false}
               />
             </div>
           )}
 
           <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-black">Your Details</h2>
-            <VehicleForm
-              initialVehicle={vehicle ?? undefined}
-              onSubmit={(v) => setVehicle(v)}
-            />
+            <VehicleForm ref={vehicleFormRef} initialVehicle={initialVehicle} showSaveButton={false} />
           </div>
 
           <div className="pt-4">
             <button
               onClick={handleStart}
-              disabled={createSession.isPending || isSubmitting || !selectedZone || !vehicle}
+              disabled={createSession.isPending || isSubmitting}
               className="w-full rounded-2xl bg-red-600 px-6 py-4 text-lg font-bold text-white shadow-lg shadow-red-600/20 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {createSession.isPending ? 'Starting Session...' : 'Confirm & Start Parking'}
             </button>
             <p className="text-xs text-center text-gray-500 mt-3">
-              By clicking confirm, you accept the parking rates and terms.
+              Select a zone, enter your details, then click to start. Phone: 09XXXXXXXX · Plate: min 5 chars.
             </p>
           </div>
         </div>

@@ -1,28 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Card from '../ui/Card';
 import { Vehicle } from '@/types/parking';
 
 interface VehicleFormProps {
   initialVehicle?: Vehicle;
-  onSubmit: (vehicle: Vehicle | null) => void;
+  onSubmit?: (vehicle: Vehicle | null) => void;
   onCancel?: () => void;
+  /** When true, show a Save button so user explicitly confirms details */
+  showSaveButton?: boolean;
 }
 
-export default function VehicleForm({ initialVehicle, onSubmit, onCancel }: VehicleFormProps) {
+export interface VehicleFormRef {
+  getVehicle: () => Vehicle | null;
+}
+
+const VehicleForm = forwardRef<VehicleFormRef, VehicleFormProps>(
+  function VehicleForm({ initialVehicle, onSubmit, onCancel, showSaveButton }, ref) {
   const [phoneNumber, setPhoneNumber] = useState(initialVehicle?.phoneNumber || '');
   const [plateNumber, setPlateNumber] = useState(initialVehicle?.plateNumber || '');
   const [name, setName] = useState(initialVehicle?.name || '');
 
   const isFormMode = !!onCancel;
 
-  // Only auto-submit when both fields are complete and valid (not on every keystroke)
   const isPhoneValid = /^09\d{8}$/.test(phoneNumber.trim());
   const isPlateValid = plateNumber.trim().length >= 5;
 
+  useImperativeHandle(ref, () => ({
+    getVehicle: (): Vehicle | null => {
+      if (isPhoneValid && isPlateValid) {
+        return {
+          phoneNumber: phoneNumber.trim(),
+          plateNumber: plateNumber.trim(),
+          name: name?.trim() || undefined,
+        };
+      }
+      return null;
+    },
+  }), [phoneNumber, plateNumber, name, isPhoneValid, isPlateValid]);
+
   useEffect(() => {
-    if (!isFormMode) {
+    if (!isFormMode && onSubmit) {
       if (isPhoneValid && isPlateValid) {
         onSubmit({ phoneNumber: phoneNumber.trim(), plateNumber: plateNumber.trim(), name: name?.trim() });
       } else {
@@ -33,7 +52,7 @@ export default function VehicleForm({ initialVehicle, onSubmit, onCancel }: Vehi
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isPhoneValid && isPlateValid) {
+    if (isPhoneValid && isPlateValid && onSubmit) {
       onSubmit({ phoneNumber: phoneNumber.trim(), plateNumber: plateNumber.trim(), name: name?.trim() });
     }
   };
@@ -109,5 +128,27 @@ export default function VehicleForm({ initialVehicle, onSubmit, onCancel }: Vehi
     );
   }
 
-  return <div className="space-y-4">{fields}</div>;
-}
+  const handleSave = () => {
+    if (isPhoneValid && isPlateValid && onSubmit) {
+      onSubmit({ phoneNumber: phoneNumber.trim(), plateNumber: plateNumber.trim(), name: name?.trim() || undefined });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {fields}
+      {showSaveButton && (
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!isPhoneValid || !isPlateValid}
+          className="w-full rounded-lg bg-green-600 px-4 py-3 font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Save Details
+        </button>
+      )}
+    </div>
+  );
+});
+
+export default VehicleForm;

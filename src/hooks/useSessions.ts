@@ -19,12 +19,16 @@ export function useSessions() {
   });
 }
 
-export function useSessionById(id: string | null) {
+export function useSessionById(
+  id: string | null,
+  options?: { refetchInterval?: number | ((query: { state: { data?: { status?: string } } }) => number | false) }
+) {
   return useQuery({
     queryKey: queryKeys.sessions.detail(id ?? ''),
     queryFn: () => fetchSessionById(id!),
     enabled: !!id,
     refetchOnMount: 'always',
+    ...(options?.refetchInterval !== undefined && { refetchInterval: options.refetchInterval }),
   });
 }
 
